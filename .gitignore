@@ -1,14 +1,81 @@
+# =========================
+# Gerais (Node/JS)
+# =========================
 node_modules/
-npm-debug.log*
+dist/
+build/
+out/
+.cache/
+.tmp/
+tmp/
+temp/
+.parcel-cache/
+.turbo/
+.vercel/
+.eslintcache
+.nyc_output/
+coverage/
+*.tsbuildinfo
+
+# Logs
+logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-starter-bot/.env
-starter-bot/sessions/
-starter-bot/comprovantes/
-starter-bot/reports/
-starter-bot/data/*.jsonl
+# Env & segredos
+.env
+.env.*.local
+.env.local
+!.env.example
 
+# IDE / SO
 .DS_Store
 Thumbs.db
+.idea/
+.vscode/
+
+# =========================
+# IGNORAR O PROJETO DE BOT DE TESTE
+# =========================
+starter-bot/
+
+# =========================
+# WhatsApp Web JS (wwebjs)
+# =========================
+# Autenticações/sessões e cache
+**/.wwebjs_auth/
+**/.wwebjs_cache/
+
+# (redundância por segurança — ok manter)
 starter-bot/.wwebjs_auth/
 starter-bot/.wwebjs_cache/
+
+# =========================
+# Perfil Chromium / Puppeteer
+# (arquivos temporários de perfis de navegador)
+# =========================
+**/Crashpad/
+**/GPUCache/
+**/DawnCache/
+**/Service Worker/
+**/VideoDecodeStats/
+**/WebStorage/
+**/IndexedDB/
+**/Local Storage/
+**/Session Storage/
+**/shared_proto_db/
+**/Code Cache/
+**/databases/
+**/User Data/
+**/Default/Cookies*
+**/DevToolsActivePort
+
+# =========================
+# GitHub Pages
+# =========================
+# Se estiver publicando via /docs, mantenha rastreado
+!docs/
+!docs/.nojekyll
