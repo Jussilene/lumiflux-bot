@@ -10,3 +10,5 @@ starter-bot/data/*.jsonl
 
 .DS_Store
 Thumbs.db
+starter-bot/.wwebjs_auth/
+starter-bot/.wwebjs_cache/

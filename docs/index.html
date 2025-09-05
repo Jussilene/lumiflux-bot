@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LumiFlux Bot | Automação para WhatsApp</title>
+  <meta name="description" content="LumiFlux Bot: respostas automáticas, menu, pedido com PIX e relatórios. Ideal para restaurantes, salões, clínicas e lojas." />
+  <!-- Ícones (usando seus arquivos) -->
+  <link rel="icon" href="assets/lumiflux-favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/lumiflux-icon-512.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      /* Neutro moderno + rosa LED */
+      --bg:#121317; --bg2:#191b21;
+      --card:rgba(255,255,255,.04);
+      --text:#eef0f4; --muted:#b9c0cd;
+      --pink:#f472b6; --pink-2:#ff6fbe;
+      --radius:18px; --shadow:0 14px 40px rgba(0,0,0,.48);
+      --glass-border:1px solid rgba(255,255,255,.16);
+    }
+    *{box-sizing:border-box}
+    html,body{
+      margin:0; padding:0; font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif; color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(244,114,182,.10), transparent 60%),
+        radial-gradient(900px 500px at 80% -10%, rgba(255,255,255,.06), transparent 55%),
+        linear-gradient(180deg,var(--bg),var(--bg2));
+      background-attachment: fixed;
+    }
+    a{color:inherit;text-decoration:none}
+    .container{max-width:1120px;margin:0 auto;padding:24px}
+
+    /* Botões LED */
+    .cta{
+      position:relative;display:inline-flex;align-items:center;gap:10px;
+      padding:12px 18px;border-radius:14px;border:1px solid rgba(255,255,255,.18);
+      background:linear-gradient(135deg,var(--pink),var(--pink-2));
+      color:#0a0a0a;font-weight:800;letter-spacing:.2px;
+      box-shadow:0 0 18px rgba(255,111,190,.45), 0 0 36px rgba(255,111,190,.25), 0 2px 0 rgba(255,255,255,.06) inset;
+      transition: transform .15s ease, box-shadow .2s ease; text-shadow:0 1px 0 rgba(255,255,255,.25);
+    }
+    .cta:hover{transform:translateY(-1px);box-shadow:0 0 0 4px rgba(255,111,190,.15), 0 0 18px rgba(255,111,190,.45), 0 0 36px rgba(255,111,190,.25)}
+    .cta.outline{
+      background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01));
+      color:#f6e9f2;border:1px solid rgba(255,255,255,.26);box-shadow:0 0 0 1px rgba(255,111,190,.22) inset;
+    }
+    /* WhatsApp piscando */
+    @keyframes pulseGlow {0%{box-shadow:0 0 0 0 rgba(255,111,190,.65)}60%{box-shadow:0 0 28px 10px rgba(255,111,190,.30)}100%{box-shadow:0 0 0 0 rgba(255,111,190,0)}}
+    .whats{animation:pulseGlow 1.8s ease-in-out infinite}
+
+    /* HERO */
+    .hero{display:grid;grid-template-columns:1fr;gap:18px;align-items:center;padding:42px 0;text-align:center}
+    .hero .panel{border:1px solid rgba(255,255,255,.22);border-radius:22px;padding:24px;box-shadow:var(--shadow);max-width:1000px;margin:0 auto}
+    .hero img{max-width:960px;width:100%;height:auto;border-radius:18px;display:block;margin:0 auto}
+    .hero p{color:var(--muted);font-size:18px;margin:0 auto;max-width:760px}
+    .actions{display:flex;gap:12px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+
+    /* Cards / Glass */
+    .card{position:relative;border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)); border:var(--glass-border);backdrop-filter: blur(10px);}
+
+    .grid{display:grid;gap:18px;justify-content:center}
+    .grid-3{grid-template-columns:repeat(3, minmax(280px, 340px))}
+    .grid-2{grid-template-columns:repeat(2, minmax(320px, 520px))}
+    @media (max-width:1080px){.grid-3{grid-template-columns:repeat(2, minmax(280px, 340px))}}
+    @media (max-width:760px){.grid-3,.grid-2{grid-template-columns:1fr}}
+
+    .feat{display:flex;gap:14px;align-items:flex-start}
+    .feat i{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:rgba(255,111,190,.16);
+      border:1px solid rgba(255,111,190,.32);box-shadow:0 0 14px rgba(255,111,190,.25) inset, 0 8px 30px rgba(2,6,23,.35)}
+    .feat h3{margin:2px 0 6px;font-size:18px}
+    .feat p{margin:0;color:var(--muted)}
+
+    .steps{counter-reset:s}
+    .steps .step{display:flex;gap:14px;align-items:flex-start}
+    .steps .step .num{counter-increment:s;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
+      background:rgba(255,111,190,.18);border:1px solid rgba(255,111,190,.4);font-weight:800;box-shadow:0 0 20px rgba(255,111,190,.22) inset}
+
+    .plans{display:grid;grid-template-columns:repeat(3, minmax(280px, 1fr));gap:20px;justify-content:center}
+    @media (max-width:1080px){.plans{grid-template-columns:repeat(2, minmax(280px, 1fr))}}
+    @media (max-width:760px){.plans{grid-template-columns:1fr}}
+    .plan{padding:20px;border-radius:var(--radius);background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border:var(--glass-border);box-shadow:var(--shadow);transition:transform .15s ease, box-shadow .2s ease}
+    .plan:hover{transform:translateY(-2px);box-shadow:0 0 0 4px rgba(255,111,190,.08), var(--shadow)}
+    .plan h4{margin:2px 0 8px;font-size:20px}
+    .price{font-size:34px;font-weight:900;text-shadow:0 1px 14px rgba(255,111,190,.25)}
+    .plan ul{list-style:none;padding:0;margin:14px 0 0;color:var(--muted)}
+    .plan li{padding:6px 0;display:flex;gap:8px}
+    .badge{display:inline-block;padding:4px 10px;border-radius:999px;background:rgba(34,197,94,.15);
+      color:#d1fadf;border:1px solid rgba(34,197,94,.35);font-weight:800;font-size:12px;box-shadow:0 0 12px rgba(34,197,94,.25)}
+
+    .divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,111,190,.35),rgba(255,255,255,.22),transparent);margin:28px 0}
+    .footer{margin:44px 0 10px;color:#c7ccd6;font-size:14px;text-align:center}
+    .small{font-size:12px;color:var(--muted)}
+
+    /* FAQ: pergunta em negrito, resposta normal */
+    .faq dl{max-width:920px;margin:0 auto}
+    .faq dt{font-weight:800;margin-top:16px}
+    .faq dd{margin:6px 0 12px;color:var(--muted);font-weight:400}
+  </style>
+</head>
+<body>
+  <main class="container">
+    <!-- HERO com logo final centralizada -->
+    <section class="hero">
+      <div class="panel">
+        <img src="assets/lumiflux-logo-tagline-underline.png" alt="LumiFlux Bot – Automação para WhatsApp"/>
+      </div>
+      <p>Bot de WhatsApp focado em <strong>pequenos negócios</strong>: restaurantes, salões, clínicas e lojas. Organiza atendimento, envia menu, captura pedidos e orienta pagamento por PIX.</p>
+      <div class="actions">
+        <a class="cta" href="#planos">Ver planos</a>
+        <a class="cta outline" href="#demo">Ver demo</a>
+        <!-- WhatsApp pessoal p/ testes, piscando -->
+        <a class="cta whats" href="https://wa.me/5541998119767" target="_blank" rel="noopener">Falar no WhatsApp</a>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="grid grid-3">
+      <div class="card feat"><i>🍽️</i><div><h3>Menu/Serviços</h3><p>Envio de cardápio ou lista de serviços com preços e opções.</p></div></div>
+      <div class="card feat"><i>🧭</i><div><h3>Fluxo guiado</h3><p>Perguntas passo a passo até concluir o pedido ou agendamento.</p></div></div>
+      <div class="card feat"><i>📍</i><div><h3>Entrega/Retirada</h3><p>Captura endereço e preferências do cliente de forma clara.</p></div></div>
+      <div class="card feat"><i>📦</i><div><h3>Carrinho simples</h3><p>Quantidade por item e totalização no final da conversa.</p></div></div>
+      <div class="card feat"><i>👤</i><div><h3>Perfil do cliente</h3><p>Nome e contato salvos para facilitar o pós-venda.</p></div></div>
+      <div class="card feat"><i>🔔</i><div><h3>Alertas</h3><p>Notificação ao dono por WhatsApp quando entra pedido novo.</p></div></div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- Como funciona / Para quem é - centralizado -->
+    <section id="como" class="grid grid-2 steps">
+      <div class="card">
+        <h3 style="margin:0 0 8px">Como funciona</h3>
+        <div class="step"><div class="num">1</div><div><strong>Configuração em 24h.</strong> Você envia logo, cardápio/serviços e a chave PIX. Criamos o bot e conectamos ao seu número.</div></div>
+        <div class="step"><div class="num">2</div><div><strong>Testes guiados.</strong> Validamos o fluxo e ajustamos textos e preços.</div></div>
+        <div class="step"><div class="num">3</div><div><strong>Go‑live.</strong> Você recebe um vídeo curto de uso e um resumo semanal automático.</div></div>
+      </div>
+      <div class="card">
+        <h3 style="margin:0 0 8px">Para quem é</h3>
+        <p class="small">Negócios que precisam <em>responder rápido</em> sem contratar mais gente.</p>
+        <ul style="margin:0;padding-left:18px;color:var(--muted)">
+          <li>Restaurantes, hamburguerias, marmitas</li>
+          <li>Salões/Barbearias, clínicas e estúdios</li>
+          <li>Lojas físicas e e‑commerce local</li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- Planos - centralizados -->
+    <section id="planos">
+      <h2 style="margin:0 0 12px">Planos</h2>
+      <p class="small">Comece simples e evolua quando precisar. Sem fidelidade.</p>
+      <div class="plans">
+        <div class="plan">
+          <h4>Starter</h4>
+          <div class="price">R$ 147<span class="small">/mês</span></div>
+          <span class="badge">+ Setup R$ 297</span>
+          <ul>
+            <li>✔ Fluxo simples (menu → pedido → Formas de Pagamento)</li>
+            <li>✔ Mensagem fora de horário</li>
+            <li>✔ Alerta de novo pedido</li>
+            <li>— Sem integrações externas</li>
+          </ul>
+          <div style="margin-top:14px"><a class="cta" href="#contato">Quero o Starter</a></div>
+        </div>
+        <div class="plan">
+          <h4>Pro <span class="small" style="margin-left:6px;background:linear-gradient(90deg,var(--pink-2),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent">Mais popular</span></h4>
+          <div class="price">R$ 297<span class="small">/mês</span></div>
+          <span class="badge">+ Setup R$ 397</span>
+          <ul>
+            <li>✔ Tudo do Starter</li>
+            <li>✔ Relatório semanal em CSV</li>
+            <li>✔ Personalização visual</li>
+            <li>✔ Até 3 alterações/mês no cardápio</li>
+          </ul>
+          <div style="margin-top:14px"><a class="cta" href="#contato">Quero o Pro</a></div>
+        </div>
+        <div class="plan">
+          <h4>Full</h4>
+          <div class="price">R$ 497<span class="small">/mês</span></div>
+          <span class="badge">+ Setup R$ 897</span>
+          <ul>
+            <li>✔ Tudo do Pro</li>
+            <li>✔ Integração planilha Google</li>
+            <li>✔ Domínio/landing e analytics</li>
+            <li>✔ Suporte priorizado</li>
+          </ul>
+          <div style="margin-top:14px"><a class="cta" href="#contato">Quero o Full</a></div>
+        </div>
+      </div>
+      <p class="small" style="margin-top:10px">Valores de exemplo; podem variar por demanda e personalização.</p>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- FAQ -->
+    <section id="faq" class="faq card">
+      <h3 style="margin:0 0 8px">Perguntas frequentes</h3>
+      <dl>
+        <dt>Preciso de um número exclusivo?</dt>
+        <dd>Recomendamos SIM para não misturar conversas pessoais. O bot funciona com WhatsApp normal do cliente.</dd>
+        <dt>O pagamento é automático?</dt>
+        <dd>Nesta versão, o bot envia a chave PIX e orienta o envio do comprovante. A confirmação é manual.</dd>
+        <dt>É oficial do WhatsApp?</dt>
+        <dd>É uma automação que responde mensagens no seu WhatsApp. Evite disparos em massa e use somente com consentimento dos clientes.</dd>
+      </dl>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- Demo -->
+    <section id="demo" class="card" style="text-align:center">
+      <h3 style="margin:0 0 8px">Quer ver um exemplo?</h3>
+      <p class="small">Envie <strong>"Olá, quero fazer um pedido"</strong> no WhatsApp abaixo e veja o fluxo.</p>
+      <a id="contato" class="cta" href="https://wa.me/5541995071438?text=Ol%C3%A1%2C%20quero%20ver%20o%20LumiFlux%20Bot%20em%20a%C3%A7%C3%A3o!" target="_blank" rel="noopener">Abrir WhatsApp do bot demo</a>
+    </section>
+
+    <p class="small" style="margin-top:16px">Aviso: este bot destina-se a responder clientes que entram em contato. Evite uso para mensagens não solicitadas.</p>
+
+    <footer class="footer">© <span id="year"></span> LumiFlux Bot • Todos os direitos reservados</footer>
+  </main>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
