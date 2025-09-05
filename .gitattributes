@@ -1,0 +1,33 @@
+# Normalização de texto
+* text=auto
+
+# Força LF para arquivos de código/web (evita avisos de CRLF/LF)
+*.sh   text eol=lf
+*.js   text eol=lf
+*.ts   text eol=lf
+*.tsx  text eol=lf
+*.jsx  text eol=lf
+*.css  text eol=lf
+*.scss text eol=lf
+*.html text eol=lf
+*.md   text eol=lf
+*.json text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.svg  text eol=lf
+docs/.nojekyll text eol=lf
+
+# Binários (sem conversão de fim de linha / diff)
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.avif binary
+*.bmp  binary
+*.ttf  binary
+*.otf  binary
+*.woff binary
+*.woff2 binary
+*.eot  binary
