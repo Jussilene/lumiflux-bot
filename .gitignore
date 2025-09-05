@@ -1,0 +1,12 @@
+node_modules/
+npm-debug.log*
+*.log
+
+starter-bot/.env
+starter-bot/sessions/
+starter-bot/comprovantes/
+starter-bot/reports/
+starter-bot/data/*.jsonl
+
+.DS_Store
+Thumbs.db
