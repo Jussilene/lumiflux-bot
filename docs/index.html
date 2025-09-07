@@ -136,7 +136,7 @@
         <h3 style="margin:0 0 8px">Como funciona</h3>
         <div class="step"><div class="num">1</div><div><strong>Configuração em 24h.</strong> Você envia logo, cardápio/serviços e a chave PIX. Criamos o bot e conectamos ao seu número.</div></div>
         <div class="step"><div class="num">2</div><div><strong>Testes guiados.</strong> Validamos o fluxo e ajustamos textos e preços.</div></div>
-        <div class="step"><div class="num">3</div><div><strong>Go‑live.</strong> Você recebe um vídeo curto de uso e um resumo semanal automático.</div></div>
+        <div class="step"><div class="num">3</div><div><strong>Go-live.</strong> Você recebe um vídeo curto de uso e um resumo semanal automático.</div></div>
       </div>
       <div class="card">
         <h3 style="margin:0 0 8px">Para quem é</h3>
@@ -144,7 +144,7 @@
         <ul style="margin:0;padding-left:18px;color:var(--muted)">
           <li>Restaurantes, hamburguerias, marmitas</li>
           <li>Salões/Barbearias, clínicas e estúdios</li>
-          <li>Lojas físicas e e‑commerce local</li>
+          <li>Lojas físicas e e-commerce local</li>
         </ul>
       </div>
     </section>
@@ -166,7 +166,7 @@
             <li>✔ Alerta de novo pedido</li>
             <li>— Sem integrações externas</li>
           </ul>
-          <div style="margin-top:14px"><a class="cta" href="#contato">Quero o Starter</a></div>
+          <div style="margin-top:14px"><a class="cta" id="buy-starter" href="#contato">Quero o Starter</a></div>
         </div>
         <div class="plan">
           <h4>Pro <span class="small" style="margin-left:6px;background:linear-gradient(90deg,var(--pink-2),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent">Mais popular</span></h4>
@@ -178,7 +178,7 @@
             <li>✔ Personalização visual</li>
             <li>✔ Até 3 alterações/mês no cardápio</li>
           </ul>
-          <div style="margin-top:14px"><a class="cta" href="#contato">Quero o Pro</a></div>
+          <div style="margin-top:14px"><a class="cta" id="buy-pro" href="#contato">Quero o Pro</a></div>
         </div>
         <div class="plan">
           <h4>Full</h4>
@@ -190,7 +190,7 @@
             <li>✔ Domínio/landing e analytics</li>
             <li>✔ Suporte priorizado</li>
           </ul>
-          <div style="margin-top:14px"><a class="cta" href="#contato">Quero o Full</a></div>
+          <div style="margin-top:14px"><a class="cta" id="buy-full" href="#contato">Quero o Full</a></div>
         </div>
       </div>
       <p class="small" style="margin-top:10px">Valores de exemplo; podem variar por demanda e personalização.</p>
@@ -225,8 +225,47 @@
     <footer class="footer">© <span id="year"></span> LumiFlux Bot • Todos os direitos reservados</footer>
   </main>
 
+  <!-- seu script original do ano -->
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+
+  <!-- script do checkout com fallback (POST -> GET redirect) -->
+  <script>
+    const API_BASE = 'https://lumiflux-bot-api.onrender.com';
+
+    async function startSetup(plan){
+      try {
+        const r = await fetch(`${API_BASE}/api/checkout/setup-first`, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ plan }) // 'starter' | 'pro' | 'full'
+        });
+
+        // tenta interpretar como JSON; se falhar, forçamos o fallback GET
+        const data = await r.json().catch(() => null);
+
+        if (data && data.checkoutUrl) {
+          window.location.href = data.checkoutUrl; // abre checkout do SETUP
+        } else {
+          // Fallback sem CORS/preflight
+          window.location.href = `${API_BASE}/api/checkout/setup-first?plan=${encodeURIComponent(plan)}`;
+        }
+      } catch (e) {
+        // Fallback em caso de erro de rede
+        window.location.href = `${API_BASE}/api/checkout/setup-first?plan=${encodeURIComponent(plan)}`;
+      }
+    }
+
+    document.getElementById('buy-starter')?.addEventListener('click', (e)=>{
+      e.preventDefault(); startSetup('starter');
+    });
+    document.getElementById('buy-pro')?.addEventListener('click', (e)=>{
+      e.preventDefault(); startSetup('pro');
+    });
+    document.getElementById('buy-full')?.addEventListener('click', (e)=>{
+      e.preventDefault(); startSetup('full');
+    });
   </script>
 </body>
 </html>
