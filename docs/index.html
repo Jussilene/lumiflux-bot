@@ -107,7 +107,12 @@
     <!-- HERO com logo final centralizada -->
     <section class="hero">
       <div class="panel">
-        <img src="assets/lumiflux-logo-tagline-underline.png" alt="LumiFlux Bot – Automação para WhatsApp"/>
+        <!-- Fallback: se abrir o arquivo em /web/, troca para ../docs/assets/... -->
+        <img
+          src="assets/lumiflux-logo-tagline-underline.png"
+          alt="LumiFlux Bot – Automação para WhatsApp"
+          onerror="this.onerror=null; this.src='../docs/assets/lumiflux-logo-tagline-underline.png';"
+        />
       </div>
       <p>Bot de WhatsApp focado em <strong>pequenos negócios</strong>: restaurantes, salões, clínicas e lojas. Organiza atendimento, envia menu, captura pedidos e orienta pagamento por PIX.</p>
       <div class="actions">

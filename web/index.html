@@ -107,7 +107,12 @@
     <!-- HERO com logo final centralizada -->
     <section class="hero">
       <div class="panel">
-        <img src="assets/lumiflux-logo-tagline-underline.png" alt="LumiFlux Bot – Automação para WhatsApp"/>
+        <!-- Fallback: se abrir o arquivo em /web/, troca para ../docs/assets/... -->
+        <img
+          src="assets/lumiflux-logo-tagline-underline.png"
+          alt="LumiFlux Bot – Automação para WhatsApp"
+          onerror="this.onerror=null; this.src='../docs/assets/lumiflux-logo-tagline-underline.png';"
+        />
       </div>
       <p>Bot de WhatsApp focado em <strong>pequenos negócios</strong>: restaurantes, salões, clínicas e lojas. Organiza atendimento, envia menu, captura pedidos e orienta pagamento por PIX.</p>
       <div class="actions">
@@ -230,7 +235,7 @@
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>
 
-  <!-- script do checkout (alterado: setup-first) -->
+  <!-- script do checkout com fallback (POST -> GET redirect) -->
   <script>
     const API_BASE = 'https://lumiflux-bot-api.onrender.com';
 
@@ -241,14 +246,19 @@
           headers:{'Content-Type':'application/json'},
           body: JSON.stringify({ plan }) // 'starter' | 'pro' | 'full'
         });
-        const data = await r.json();
-        if (data.checkoutUrl) {
+
+        // tenta interpretar como JSON; se falhar, forçamos o fallback GET
+        const data = await r.json().catch(() => null);
+
+        if (data && data.checkoutUrl) {
           window.location.href = data.checkoutUrl; // abre checkout do SETUP
         } else {
-          alert('Erro ao iniciar setup: ' + (data.error || 'desconhecido'));
+          // Fallback sem CORS/preflight
+          window.location.href = `${API_BASE}/api/checkout/setup-first?plan=${encodeURIComponent(plan)}`;
         }
       } catch (e) {
-        alert('Falha na conexão com a API: ' + e.message);
+        // Fallback em caso de erro de rede
+        window.location.href = `${API_BASE}/api/checkout/setup-first?plan=${encodeURIComponent(plan)}`;
       }
     }
 
