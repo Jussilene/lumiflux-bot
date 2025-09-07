@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sucesso • LumiFlux Bot</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#0f1115; color:#eaeff6; margin:0; padding:40px; }
+    .box { max-width:720px; margin:0 auto; background:#171923; border:1px solid rgba(255,255,255,.12); border-radius:14px; padding:24px; }
+    .cta { display:inline-block; margin-top:14px; padding:12px 18px; border-radius:12px; background:linear-gradient(135deg,#f472b6,#ff6fbe); color:#0a0a0a; font-weight:800; text-decoration:none }
+    .muted { color:#a9b2c2; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Pagamento confirmado 🎉</h1>
+    <p>Setup concluído com sucesso. Estamos ativando sua assinatura.</p>
+    <p class="muted" id="status">Criando a assinatura…</p>
+    <a class="cta" href="index.html#planos">Voltar para o site</a>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:3001'; // troque para sua API pública depois
+
+    function getParam(k){ return new URL(location.href).searchParams.get(k); }
+
+    async function createSubscription(){
+      const setupSessionId = getParam('setup_session_id'); // recebido do checkout do setup
+      const plan = getParam('plan') || 'starter';
+      if (!setupSessionId) {
+        document.getElementById('status').textContent = 'ID do checkout de setup não encontrado.';
+        return;
+      }
+      try {
+        const r = await fetch(`${API_BASE}/api/subscribe/after-setup`, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ setupSessionId, plan })
+        });
+        const data = await r.json();
+        if (data.ok) {
+          const dt = new Date(data.billingStartsAt);
+          document.getElementById('status').textContent =
+            `Assinatura criada. A primeira mensalidade será cobrada em ${dt.toLocaleDateString()}.`;
+        } else {
+          document.getElementById('status').textContent = 'Falha ao criar assinatura: ' + (data.error || 'desconhecido');
+        }
+      } catch (e) {
+        document.getElementById('status').textContent = 'Erro de rede: ' + e.message;
+      }
+    }
+
+    createSubscription();
+  </script>
+</body>
+</html>
