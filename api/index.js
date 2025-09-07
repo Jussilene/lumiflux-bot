@@ -4,22 +4,25 @@ import express from 'express';
 import Stripe from 'stripe';
 import cors from 'cors';
 
-console.log('Stripe key prefix:', process.env.STRIPE_SECRET?.slice(0,7)); // deve imprimir sk_live
+console.log('Stripe key prefix:', process.env.STRIPE_SECRET?.slice(0, 7));
 
 const app = express();
-app.use(cors()); // aberto; em produção você pode restringir a origin
+
+// CORS amplo + OPTIONS para pré-flight
+app.use(cors({ origin: '*' }));
+app.options('*', cors());
+
 app.use(express.json());
 
 const stripe = new Stripe(process.env.STRIPE_SECRET, { apiVersion: '2024-06-20' });
 
-// ====== Prices LIVE ======
-// Recorrentes (assinatura)
+// Prices (assinatura mensal)
 const PLAN_SUB = {
   starter: process.env.PRICE_STARTER_MONTHLY,
   pro:     process.env.PRICE_PRO_MONTHLY,
   full:    process.env.PRICE_FULL_MONTHLY,
 };
-// Avulsos (setup)
+// Prices (setup avulso)
 const PLAN_SETUP = {
   starter: process.env.PRICE_SETUP_STARTER,
   pro:     process.env.PRICE_SETUP_PRO,
@@ -31,66 +34,54 @@ app.get('/', (_, res) => res.send('LumiFlux API OK'));
 app.get('/api/health', (_, res) => res.json({ ok: true, ts: Date.now() }));
 
 /**
- * ETAPA 1 — Checkout do SETUP via POST (mantido)
+ * ETAPA 1 — Checkout do SETUP (paga agora).
+ * POST normal (SPA) + GET fallback (navegação direta).
  */
+async function createSetupSession({ plan, email }) {
+  const priceSetup = PLAN_SETUP[plan];
+  if (!priceSetup) throw new Error('Plano inválido ou price ausente (setup)');
+
+  return stripe.checkout.sessions.create({
+    mode: 'payment',
+    payment_method_types: ['card'],
+    line_items: [{ price: priceSetup, quantity: 1 }],
+    customer_creation: 'always',
+    payment_intent_data: { setup_future_usage: 'off_session' },
+    customer_email: email || undefined,
+    success_url: `${process.env.APP_URL}/success.html?setup_session_id={CHECKOUT_SESSION_ID}&plan=${plan}`,
+    cancel_url: `${process.env.APP_URL}/cancel.html`,
+    metadata: { plan, kind: 'setup', source: 'lumiflux-bot' },
+    locale: 'pt-BR',
+  });
+}
+
+// POST (AJAX)
 app.post('/api/checkout/setup-first', async (req, res) => {
   try {
     const { plan = 'starter', email } = req.body || {};
-    const priceSetup = PLAN_SETUP[plan];
-    if (!priceSetup) return res.status(400).json({ error: 'Plano inválido ou price ausente (setup)' });
-
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      payment_method_types: ['card'],
-      line_items: [{ price: priceSetup, quantity: 1 }],
-      customer_creation: 'always',
-      payment_intent_data: { setup_future_usage: 'off_session' },
-      customer_email: email || undefined,
-      success_url: `${process.env.APP_URL}/success.html?setup_session_id={CHECKOUT_SESSION_ID}&plan=${plan}`,
-      cancel_url: `${process.env.APP_URL}/cancel.html`,
-      metadata: { plan, kind: 'setup', source: 'lumiflux-bot' },
-      locale: 'pt-BR',
-    });
-
+    const session = await createSetupSession({ plan, email });
     return res.json({ checkoutUrl: session.url });
   } catch (err) {
-    console.error('checkout/setup-first error:', err?.type, err?.message, err?.raw);
+    console.error('checkout/setup-first POST:', err?.message);
     return res.status(500).json({ error: err?.message || 'Erro desconhecido' });
   }
 });
 
-/**
- * NOVO: ETAPA 1 — Checkout do SETUP via GET (fallback sem CORS)
- * Ex.: https://SEU-API.onrender.com/api/checkout/setup-first?plan=starter
- * Redireciona 303 direto para o Stripe.
- */
+// GET (fallback por navegação direta)
 app.get('/api/checkout/setup-first', async (req, res) => {
   try {
-    const plan = (req.query.plan || 'starter').toString();
-    const priceSetup = PLAN_SETUP[plan];
-    if (!priceSetup) return res.status(400).send('Plano inválido');
-
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      payment_method_types: ['card'],
-      line_items: [{ price: priceSetup, quantity: 1 }],
-      customer_creation: 'always',
-      payment_intent_data: { setup_future_usage: 'off_session' },
-      success_url: `${process.env.APP_URL}/success.html?setup_session_id={CHECKOUT_SESSION_ID}&plan=${plan}`,
-      cancel_url: `${process.env.APP_URL}/cancel.html`,
-      metadata: { plan, kind: 'setup', source: 'lumiflux-bot' },
-      locale: 'pt-BR',
-    });
-
-    return res.redirect(303, session.url);
+    const plan = req.query.plan || 'starter';
+    const email = req.query.email;
+    const session = await createSetupSession({ plan, email });
+    return res.redirect(session.url); // redireciona direto ao Stripe
   } catch (err) {
-    console.error('checkout/setup-first GET error:', err?.type, err?.message, err?.raw);
-    return res.status(500).send('Erro ao iniciar checkout');
+    console.error('checkout/setup-first GET:', err?.message);
+    return res.status(500).send(`Erro: ${err?.message || 'desconhecido'}`);
   }
 });
 
 /**
- * ETAPA 2 — Cria ASSINATURA que começa a cobrar em 30 dias
+ * ETAPA 2 — cria a assinatura para começar em 30 dias.
  */
 app.post('/api/subscribe/after-setup', async (req, res) => {
   try {
@@ -132,7 +123,7 @@ app.post('/api/subscribe/after-setup', async (req, res) => {
       billingStartsAt: new Date(anchor * 1000).toISOString(),
     });
   } catch (err) {
-    console.error('subscribe/after-setup error:', err?.type, err?.message, err?.raw);
+    console.error('subscribe/after-setup:', err?.message);
     return res.status(500).json({ error: err?.message || 'Erro desconhecido' });
   }
 });
