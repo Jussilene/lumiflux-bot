@@ -235,6 +235,16 @@
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>
 
+  <!-- PRÉ-AQUECIMENTO DA API (Render free “acorda” mais rápido) -->
+  <script>
+    // Pré-aquece a API ao abrir o site (não bloqueia, ignora CORS)
+    (function prewarm(){
+      try {
+        fetch('https://lumiflux-bot-api.onrender.com/api/health', { mode: 'no-cors' });
+      } catch(e) {}
+    })();
+  </script>
+
   <!-- script do checkout com fallback (POST -> GET redirect) -->
   <script>
     const API_BASE = 'https://lumiflux-bot-api.onrender.com';
